@@ -25,6 +25,8 @@ conda install -c conda-forge albumentations
 
 ## 2. Inference
 
+put the checkpoints into the file ./checkpoints
+
 ### a. do inference without bbx
 
 ```
@@ -38,6 +40,10 @@ python3 inference.py \
   --class_names "Tumor" "Stroma"
 
 ```
+
+`--bbx_random` indicates to use bbx prompts or not, `1` means not using bbx, `0` means using bbx 
+`--infer_vis_dir` saves final outputs. Two types of files are save: .jpg shows visual example, `.npz` saves [class_name]: probability maps
+
 
 ### b. do inference with bbx
 
