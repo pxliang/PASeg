@@ -25,14 +25,30 @@ conda install -c conda-forge albumentations
 
 ## 2. Inference
 
-### 3. do inference without bbx
+### a. do inference without bbx
 
 ```
+dataset_name=TCGA-COAD
+
 python3 inference.py \
-  --infer_vis_dir ./results/ \
+  --infer_vis_dir ./results/${dataset_name} \
   --checkpoint_file checkpoints/pytorch_model.bin \
   --image_file /data/TCGA-COAD/20x_images/TCGA-AZ-6608-01Z-00-DX1.40d9f93f-f7d8-4138-9af1-bb579c53194b.tif \
   --bbx_random 1 \
   --class_names "Tumor" "Stroma"
 
+```
+
+### b. do inference with bbx
+
+```
+dataset_name=BRCA
+
+python3 inference_bbx.py \
+  --infer_vis_dir ./results/${dataset_name} \
+  --json_file ./idx_to_names/${dataset_name}.json \
+  --checkpoint_file ./checkpoints/pytorch_model.bin \
+  --image_dir ./examples/${dataset_name}/images \
+  --mask_dir ./examples/${dataset_name}/masks \
+  --bbx_random 0 
 ```
