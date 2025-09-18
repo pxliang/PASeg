@@ -48,6 +48,8 @@ python3 inference.py \
 
 ### b. do inference with bbx
 
+Toy examples are provided in `./examples/BRCA` for quick start
+
 ```
 dataset_name=BRCA
 
