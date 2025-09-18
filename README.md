@@ -42,6 +42,7 @@ python3 inference.py \
 ```
 
 `--bbx_random` indicates to use bbx prompts or not, `1` means not using bbx, `0` means using bbx 
+
 `--infer_vis_dir` saves final outputs. Two types of files are save: .jpg shows visual example, `.npz` saves [class_name]: probability maps
 
 
@@ -58,3 +59,7 @@ python3 inference_bbx.py \
   --mask_dir ./examples/${dataset_name}/masks \
   --bbx_random 0 
 ```
+
+`--mask_dir` provides bbx prompts
+
+`--json_file` provides class names
