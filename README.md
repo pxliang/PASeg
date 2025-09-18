@@ -25,7 +25,7 @@ conda install -c conda-forge albumentations
 
 ## 2. Inference
 
-put the checkpoints into the file ./checkpoints
+put the checkpoint into the file ./checkpoints
 
 ### a. do inference without bbx
 
@@ -34,7 +34,7 @@ dataset_name=TCGA-COAD
 
 python3 inference.py \
   --infer_vis_dir ./results/${dataset_name} \
-  --checkpoint_file checkpoints/pytorch_model.bin \
+  --checkpoint_file ./checkpoints/pytorch_model.bin \
   --image_file /data/TCGA-COAD/20x_images/TCGA-AZ-6608-01Z-00-DX1.40d9f93f-f7d8-4138-9af1-bb579c53194b.tif \
   --bbx_random 1 \
   --class_names "Tumor" "Stroma"
@@ -43,7 +43,7 @@ python3 inference.py \
 
 `--bbx_random` indicates to use bbx prompts or not, `1` means not using bbx, `0` means using bbx 
 
-`--infer_vis_dir` saves final outputs. Two types of files are save: .jpg shows visual example, `.npz` saves [class_name]: probability maps
+`--infer_vis_dir` saves final outputs. Two types of files are save: .jpg shows visual example, `.npz` saves probability maps produced by the model for each class, which in the format: [class_name]: [probability map]
 
 
 ### b. do inference with bbx
