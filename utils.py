@@ -6,46 +6,58 @@ from matplotlib.patches import Rectangle
 
 from sklearn.metrics import confusion_matrix
 
-def vis_img(image, pred_mask, true_mask, text_prompt, box, save_path):
+def quick_resize(img, max_dim=1024, is_mask=False):
+    """
+    Resize so that the longest edge ≤ max_dim, preserving aspect ratio.
+    - is_mask=True → nearest neighbor (保持整数类别)
+    - is_mask=False → area interpolation (更平滑，适合图像/概率)
+    """
+    h, w = img.shape[:2]
+    scale = max_dim / float(max(h, w))
+    if scale < 1.0:  # 只缩小，不放大
+        new_w, new_h = int(w * scale), int(h * scale)
+        interp = cv2.INTER_NEAREST if is_mask else cv2.INTER_AREA
+        img = cv2.resize(img, (new_w, new_h), interpolation=interp)
+    return img
+
+def vis_img(image, pred_mask, foreground_probs_all, template_all, save_path):
+
+    img_small = quick_resize(image, max_dim=1024)
+    pred_mask_small = quick_resize(pred_mask, max_dim=1024, is_mask=True)
+    foreground_probs_small = [quick_resize(p, max_dim=1024) for p in foreground_probs_all]
+
+    num_rows = len(foreground_probs_small) + 1
 
     # (4) Plotting
-    fig, axs = plt.subplots(1, 4, figsize=(12, 4))
-    axs[0].imshow(image)
-    axs[0].set_title(text_prompt)
-    axs[0].axis("off")
+    fig, axs = plt.subplots(num_rows, 2, figsize=(12, 4*num_rows))
 
-    axs[1].imshow(pred_mask, cmap="gray")
-    axs[1].set_title("Predicted Mask")
-    axs[1].axis("off")
+    for i in range(num_rows - 1):
 
-    if box is not None:
-        x0, y0 = int(box[0]), int(box[1])
-        w, h = int(box[2] - box[0]), int(box[3] - box[1])
-        axs[0].add_patch(Rectangle((x0, y0), w, h, edgecolor="red", facecolor=(0, 0, 0, 0), lw=2))
+        axs[i, 0].imshow(img_small)
+        axs[i, 0].set_title(template_all[i])
+        axs[i, 0].axis("off")
 
-    prob_map_8bit = (pred_mask * 255).astype(np.uint8)
-
-    # Apply Otsu's threshold
-    _, binary_mask = cv2.threshold(prob_map_8bit, 0, 1, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-
-    axs[2].imshow(binary_mask, cmap="gray")
-    axs[2].set_title("Binary Mask")
-    axs[2].axis("off")
-
-    unique_idx = np.unique(true_mask)
-    unique_idx = unique_idx[unique_idx > 0]
-
-    axs[3].imshow(true_mask, cmap='gray', vmin=0, vmax=1)
-    axs[3].set_title("Ground Truth Mask "+', '.join(str(x) for x in unique_idx))
-    axs[3].axis("off")
+        axs[i, 1].imshow(foreground_probs_small[i], cmap="gray")
+        axs[i, 1].set_title("Predicted Mask")
+        axs[i, 1].axis("off")
 
 
-    fig.savefig(save_path, bbox_inches='tight')
+    n_classes = len(template_all) + 1
+    cmap = plt.cm.get_cmap('tab20', n_classes)  # discrete colormap
+    axs[num_rows - 1, 0].imshow(img_small)
+    # axs[0].set_title(text_prompt)
+    axs[num_rows - 1, 0].axis("off")
+
+    im1 = axs[num_rows - 1, 1].imshow(pred_mask_small, cmap=cmap, vmin=0, vmax=n_classes - 1)
+    axs[num_rows - 1, 1].set_title("Predicted Mask")
+    axs[num_rows - 1, 1].axis("off")
+
+    cbar = fig.colorbar(im1, ax=axs[num_rows - 1, 1], orientation="vertical", fraction=0.02, pad=0.04)
+    cbar.set_ticks(range(n_classes))
+    cbar.set_ticklabels(["background"] +template_all)
+
+    fig.savefig(save_path, bbox_inches='tight', dpi=200)
     plt.close(fig)
-
-    assert len(unique_idx) == 1
-
-    return binary_mask
 
 
 
