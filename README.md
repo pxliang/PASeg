@@ -22,3 +22,17 @@ conda install -c conda-forge opencv
 
 conda install -c conda-forge albumentations
 ```
+
+## 2. Inference
+
+### 3. do inference without bbx
+
+```
+python3 inference.py \
+  --infer_vis_dir ./results/ \
+  --checkpoint_file checkpoints/pytorch_model.bin \
+  --image_file /data/TCGA-COAD/20x_images/TCGA-AZ-6608-01Z-00-DX1.40d9f93f-f7d8-4138-9af1-bb579c53194b.tif \
+  --bbx_random 1 \
+  --class_names "Tumor" "Stroma"
+
+```
