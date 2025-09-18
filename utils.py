@@ -48,7 +48,7 @@ def vis_img(image, pred_mask, foreground_probs_all, template_all, save_path):
     # axs[0].set_title(text_prompt)
     axs[num_rows - 1, 0].axis("off")
 
-    im1 = axs[num_rows - 1, 1].imshow(pred_mask_small, cmap=cmap, vmin=0, vmax=n_classes - 1)
+    im1 = axs[num_rows - 1, 1].imshow(pred_mask_small, cmap=cmap, vmin=0, vmax=n_classes - 1, interpolation="nearest")
     axs[num_rows - 1, 1].set_title("Predicted Mask")
     axs[num_rows - 1, 1].axis("off")
 
@@ -60,6 +60,51 @@ def vis_img(image, pred_mask, foreground_probs_all, template_all, save_path):
     plt.close(fig)
 
 
+def vis_img_bbx(image, pred_mask, true_mask, foreground_probs_all, gt_masks_all, template_all, save_path):
+
+    num_rows = len(foreground_probs_all) + 1
+
+    # (4) Plotting
+    fig, axs = plt.subplots(len(foreground_probs_all)+1, 3, figsize=(12, 4*num_rows))
+
+    for i in range(num_rows - 1):
+
+        axs[i, 0].imshow(image)
+        axs[i, 0].set_title(template_all[i])
+        axs[i, 0].axis("off")
+
+        axs[i, 1].imshow(foreground_probs_all[i], cmap="gray")
+        axs[i, 1].set_title("Predicted Mask")
+        axs[i, 1].axis("off")
+
+        axs[i, 2].imshow(gt_masks_all[i], cmap="gray")
+        axs[i, 2].set_title("Ground Truth Mask")
+        axs[i, 2].axis("off")
+
+    n_classes = len(template_all) + 1
+    cmap = plt.cm.get_cmap('tab20', n_classes)  # discrete colormap
+    cmap = plt.cm.get_cmap('tab20', n_classes)  # discrete colormap
+
+    axs[num_rows - 1, 0].imshow(image)
+    # axs[0].set_title(text_prompt)
+    axs[num_rows - 1, 0].axis("off")
+
+    axs[num_rows - 1, 1].imshow(pred_mask,  cmap=cmap, vmin=0, vmax=n_classes - 1, interpolation="nearest")
+    axs[num_rows - 1, 1].set_title("Predicted Mask")
+    axs[num_rows - 1, 1].axis("off")
+
+
+    im1 = axs[num_rows - 1, 2].imshow(true_mask,  cmap=cmap, vmin=0, vmax=n_classes - 1, interpolation="nearest")
+    axs[num_rows - 1, 2].set_title("Ground Truth Mask")
+    axs[num_rows - 1, 2].axis("off")
+
+
+    cbar = fig.colorbar(im1, ax=axs[num_rows - 1, 2], orientation="vertical", fraction=0.02, pad=0.04)
+    cbar.set_ticks(range(n_classes))
+    cbar.set_ticklabels(["background"] + template_all)
+
+    fig.savefig(save_path, bbox_inches='tight', dpi=200)
+    plt.close(fig)
 
 def evaluate_segmentation(pred_mask, true_mask, eps=1e-7):
     """
@@ -138,3 +183,19 @@ def compute_multi_class_metrics(gt, pred):
     metrics["Recall"] = np.mean(Recall)
 
     return metrics
+
+
+def save_prob_maps(foreground_probs_all, template_all, save_path="prob_maps.npz"):
+    """
+    foreground_probs_all: list of numpy arrays, 每个是一个概率图
+    template_all: list of str, 类别名称
+    save_path: 输出路径
+    """
+    assert len(foreground_probs_all) == len(template_all), "数量不一致"
+
+    # 用字典构造
+    prob_dict = {name: prob for name, prob in zip(template_all, foreground_probs_all)}
+
+    # 保存为 npz
+    np.savez(save_path, **prob_dict)
+    print(f"Saved probability maps to {save_path}")

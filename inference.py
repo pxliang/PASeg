@@ -19,7 +19,7 @@ from skimage.io import imread, imsave
 from skimage.filters import threshold_otsu
 
 from argparse import ArgumentParser
-from utils import evaluate_segmentation, compute_multi_class_metrics, vis_img
+from utils import evaluate_segmentation, compute_multi_class_metrics, vis_img, save_prob_maps
 import torchvision.transforms.functional as TF
 
 import torch.nn.functional as F
@@ -123,13 +123,14 @@ class SegWrapper(torch.nn.Module):
 def main(args):
 
     os.makedirs(args.infer_vis_dir, exist_ok=True)
-    # os.makedirs(args.index_map_dir, exist_ok=True)
 
     # Define parameters
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     print('Using device:', device)
     base_model_name = "vinid/plip"
+
+    print('class names:', args.class_names)
 
 
     # Instantiate model
@@ -145,9 +146,6 @@ def main(args):
 
     model.eval()
 
-
-    # class_names = ["Tumor Epithelium", "Normal epithelium", "Stroma", "Lymphocytes aggregated region", "Necrotic Regions"] 
-    
 
     try:
         if args.image_file.lower().endswith(('.tiff', '.tif')):
@@ -283,9 +281,9 @@ def main(args):
     img_name = os.path.splitext(os.path.basename(args.image_file))[0]
     vis_img(image, mapped_mask, foreground_probs_all, template_all, os.path.join(args.infer_vis_dir, f'{img_name}.jpg'))
 
-    foreground_probs_all = np.array(foreground_probs_all)
-    foreground_probs_all = np.transpose(foreground_probs_all, (1, 2, 0))  # (H, W, num_classes)
-    np.save(os.path.join(args.infer_vis_dir, f'{img_name}.npy'), foreground_probs_all)
+    save_prob_maps(foreground_probs_all, template_all, save_path=os.path.join(args.infer_vis_dir, f'{img_name}.npz'))
+    
+
 
 
 
